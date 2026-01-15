@@ -1,0 +1,32 @@
+{
+  "name": "budget-aware-combo-shop-mini",
+  "private": true,
+  "version": "0.0.1",
+  "description": "A Shop Mini with WebView and Vite",
+  "main": "index.tsx",
+  "scripts": {
+    "start": "shop-minis dev",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@shopify/shop-minis-cli": "0.1.5",
+    "@tailwindcss/vite": "^4.1.8",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3"
+  },
+  "browserslist": [
+    "ios >= 15",
+    "android >= 138"
+  ],
+  "dependencies": {
+    "@shopify/shop-minis-react": "0.4.18",
+    "lucide-react": "0.513.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-router": "7.7.0"
+  }
+}

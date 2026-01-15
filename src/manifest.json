@@ -1,0 +1,13 @@
+{
+  "name": "budget-aware-combo-shop-mini",
+  "permissions": [],
+  "scopes": [
+    "product_list:write",
+    "product_list:read"
+  ],
+  "trusted_domains": [
+    "shorts.multiplewords.com"
+  ],
+  "privacy_policy_url": "https://example.com/privacy",
+  "terms_url": "https://example.com/terms"
+}
