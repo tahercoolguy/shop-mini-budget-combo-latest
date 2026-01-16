@@ -3,8 +3,7 @@
   "description": "Find the perfect product combos within your budget.",
   "permissions": [],
   "scopes": [
-    "product_list:write",
-    "product_list:read"
+    "product_list:write"
   ],
   "trusted_domains": [
     "shorts.multiplewords.com"
