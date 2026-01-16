@@ -1,18 +1,25 @@
 import { useState } from 'react'
 import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react'
-import { useProductSearch, useNavigateWithTransition } from '@shopify/shop-minis-react'
-import type { AlternativeCombo, ComboResult } from '../types'
+import {
+  useProductSearch,
+  useNavigateWithTransition,
+} from '@shopify/shop-minis-react'
+import type { AlternativeCombo, ComboResult, Category } from '../types'
 import { extractSearchTerms, getProductImage } from './ProductSearchResult'
 
 interface AlternativeComboCardProps {
   combo: AlternativeCombo
   budget: number
-  category: string
-  onSelectAltCombo?: (data: { combo: ComboResult; budget: number; category: string }) => void
+  category: Category
+  onSelectAltCombo?: (data: {
+    combo: ComboResult
+    budget: number
+    category: Category
+  }) => void
 }
 
-// Convert AlternativeCombo to ComboResult format
-function convertToComboResult(altCombo: AlternativeCombo, budget: number): ComboResult {
+// Convert AlternativeCombo → ComboResult
+function convertToComboResult(altCombo: AlternativeCombo): ComboResult {
   return {
     items: altCombo.products.map((productString) => {
       const { name, price } = parseProduct(productString)
@@ -30,8 +37,10 @@ function convertToComboResult(altCombo: AlternativeCombo, budget: number): Combo
   }
 }
 
-// Extract product name and price from string like "Product Name ($150)"
-function parseProduct(productString: string): { name: string; price?: string } {
+// Extract product name and price from "Product Name ($150)"
+function parseProduct(
+  productString: string
+): { name: string; price?: string } {
   const priceMatch = productString.match(/\((\$[\d.]+)\)/)
   if (priceMatch) {
     return {
@@ -42,15 +51,18 @@ function parseProduct(productString: string): { name: string; price?: string } {
   return { name: productString.trim() }
 }
 
-export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo }: AlternativeComboCardProps) {
+export function AlternativeComboCard({
+  combo,
+  budget,
+  category,
+  onSelectAltCombo,
+}: AlternativeComboCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const navigate = useNavigateWithTransition()
 
   const handleViewCombo = () => {
-    const comboResult = convertToComboResult(combo, budget)
-    if (onSelectAltCombo) {
-      onSelectAltCombo({ combo: comboResult, budget, category })
-    }
+    const comboResult = convertToComboResult(combo)
+    onSelectAltCombo?.({ combo: comboResult, budget, category })
     navigate('/combo-detail')
   }
 
@@ -70,12 +82,15 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
           </div>
         </div>
 
-        {/* Product Images Grid */}
+        {/* Product Images */}
         <div className="grid grid-cols-3 gap-2 mb-3">
           {combo.products.slice(0, 3).map((productString, idx) => {
             const { name } = parseProduct(productString)
             return (
-              <ProductImageThumbnail key={idx} productName={name} />
+              <ProductImageThumbnail
+                key={idx}
+                productName={name}
+              />
             )
           })}
         </div>
@@ -85,13 +100,11 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
           <span className="text-white text-xs font-medium">
             {combo.products.length} items
           </span>
-          <div className="flex items-center gap-2">
-            {isExpanded ? (
-              <ChevronUp size={16} className="text-[#a3ff12]" />
-            ) : (
-              <ChevronDown size={16} className="text-[#a3ff12]" />
-            )}
-          </div>
+          {isExpanded ? (
+            <ChevronUp size={16} className="text-[#a3ff12]" />
+          ) : (
+            <ChevronDown size={16} className="text-[#a3ff12]" />
+          )}
         </div>
       </button>
 
@@ -103,7 +116,10 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
             return (
               <div key={idx} className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-white/5">
-                  <ProductImageThumbnail productName={name} size="small" />
+                  <ProductImageThumbnail
+                    productName={name}
+                    size="small"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -111,7 +127,7 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
                       {name}
                     </span>
                     {price && (
-                      <span className="text-[#a3ff12] text-xs font-bold flex-shrink-0">
+                      <span className="text-[#a3ff12] text-xs font-bold">
                         {price}
                       </span>
                     )}
@@ -120,7 +136,7 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
               </div>
             )
           })}
-          
+
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -137,8 +153,14 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
   )
 }
 
-// Component to fetch and display product image
-function ProductImageThumbnail({ productName, size = 'normal' }: { productName: string; size?: 'normal' | 'small' }) {
+// Product Image Component
+function ProductImageThumbnail({
+  productName,
+  size = 'normal',
+}: {
+  productName: string
+  size?: 'normal' | 'small'
+}) {
   const searchTerms = extractSearchTerms(productName, '')
   const { products } = useProductSearch({
     query: searchTerms,
@@ -148,12 +170,17 @@ function ProductImageThumbnail({ productName, size = 'normal' }: { productName: 
 
   const product = products?.[0]
   const imageUrl = product ? getProductImage(product as any) : null
-  const sizeClass = size === 'small' ? 'w-12 h-12' : 'w-full aspect-square'
+  const sizeClass =
+    size === 'small' ? 'w-12 h-12' : 'w-full aspect-square'
 
   if (!imageUrl) {
     return (
-      <div className={`${sizeClass} bg-white/5 rounded-lg flex items-center justify-center`}>
-        <span className="text-gray-500 text-[8px] text-center px-1">No image</span>
+      <div
+        className={`${sizeClass} bg-white/5 rounded-lg flex items-center justify-center`}
+      >
+        <span className="text-gray-500 text-[8px] text-center px-1">
+          No image
+        </span>
       </div>
     )
   }
