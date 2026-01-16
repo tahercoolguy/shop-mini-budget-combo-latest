@@ -27,6 +27,7 @@ function AppContent() {
   const [error, setError] = useState<string | null>(null)
   const [lastCombo, setLastCombo] = useState<LastCombo | null>(null)
   const [isLoadingLastCombo, setIsLoadingLastCombo] = useState(true)
+  const [altComboData, setAltComboData] = useState<{ combo: ComboResult; budget: number; category: Category } | null>(null)
 
   // Load last combo on app initialization
   useEffect(() => {
@@ -208,6 +209,7 @@ function AppContent() {
                   combo={generatedCombo}
                   budget={budget}
                   category={selectedCategory}
+                  onSelectAltCombo={(data) => setAltComboData(data as { combo: ComboResult; budget: number; category: Category })}
                 />
               ) : (
                 <Onboarding onStart={handleStart} />
@@ -218,26 +220,13 @@ function AppContent() {
           <Route
             path="/combo-detail"
             element={
-              (() => {
-                // Check if we have alternative combo data in sessionStorage
-                const altComboData = sessionStorage.getItem('altComboData')
-                if (altComboData) {
-                  try {
-                    const { combo: altCombo, budget: altBudget, category: altCategory } = JSON.parse(altComboData)
-                    sessionStorage.removeItem('altComboData') // Clean up
-                    return (
+              altComboData ? (
                       <ComboDetailScreen
-                        combo={altCombo}
-                        budget={altBudget}
-                        category={altCategory}
+                  combo={altComboData.combo}
+                  budget={altComboData.budget}
+                  category={altComboData.category}
                       />
-                    )
-                  } catch (e) {
-                    console.error('Error parsing alt combo data:', e)
-                  }
-                }
-                // Fallback to generated combo
-                return generatedCombo && selectedCategory ? (
+              ) : generatedCombo && selectedCategory ? (
                   <ComboDetailScreen
                     combo={generatedCombo}
                     budget={budget}
@@ -246,7 +235,6 @@ function AppContent() {
                 ) : (
                   <Onboarding onStart={handleStart} />
                 )
-              })()
             }
           />
 

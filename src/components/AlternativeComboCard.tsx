@@ -8,7 +8,7 @@ interface AlternativeComboCardProps {
   combo: AlternativeCombo
   budget: number
   category: string
-  onSelect?: () => void
+  onSelectAltCombo?: (data: { combo: ComboResult; budget: number; category: string }) => void
 }
 
 // Convert AlternativeCombo to ComboResult format
@@ -42,14 +42,15 @@ function parseProduct(productString: string): { name: string; price?: string } {
   return { name: productString.trim() }
 }
 
-export function AlternativeComboCard({ combo, budget, category, onSelect }: AlternativeComboCardProps) {
+export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo }: AlternativeComboCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const navigate = useNavigateWithTransition()
 
   const handleViewCombo = () => {
     const comboResult = convertToComboResult(combo, budget)
-    // Store in sessionStorage to pass to ComboDetailScreen
-    sessionStorage.setItem('altComboData', JSON.stringify({ combo: comboResult, budget, category }))
+    if (onSelectAltCombo) {
+      onSelectAltCombo({ combo: comboResult, budget, category })
+    }
     navigate('/combo-detail')
   }
 
@@ -124,7 +125,6 @@ export function AlternativeComboCard({ combo, budget, category, onSelect }: Alte
             onClick={(e) => {
               e.stopPropagation()
               handleViewCombo()
-              if (onSelect) onSelect()
             }}
             className="w-full mt-4 bg-[#a3ff12]/10 border border-[#a3ff12]/50 rounded-lg py-3 px-4 flex items-center justify-center gap-2 text-[#a3ff12] font-medium hover:bg-[#a3ff12]/20 transition-all"
           >

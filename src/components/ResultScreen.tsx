@@ -12,12 +12,14 @@ interface ResultScreenProps {
   combo: ComboResult
   budget: number
   category: Category
+  onSelectAltCombo?: (data: { combo: ComboResult; budget: number; category: Category }) => void
 }
 
 export function ResultScreen({
   combo,
   budget,
   category,
+  onSelectAltCombo,
 }: ResultScreenProps) {
   const navigate = useNavigateWithTransition()
   const [isSaved, setIsSaved] = useState(false)
@@ -197,9 +199,7 @@ export function ResultScreen({
                 combo={altCombo}
                 budget={budget}
                 category={category}
-                onSelect={() => {
-                  // Navigation is handled in AlternativeComboCard
-                }}
+                onSelectAltCombo={onSelectAltCombo}
               />
             ))}
           </div>
