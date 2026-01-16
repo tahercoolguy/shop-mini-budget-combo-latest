@@ -42,7 +42,6 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
       }
     }
     checkIfSaved()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, budget, combo.totalPrice])
 
   const handleSave = async () => {
