@@ -46,7 +46,7 @@ export function ResultScreen({
           setIsSaved(exists)
         }
       } catch (error) {
-        console.error('Error checking saved status:', error)
+        // Error checking saved status
       }
     }
     checkIfSaved()
@@ -85,7 +85,6 @@ export function ResultScreen({
         setIsSaved(true)
       }
     } catch (error) {
-      console.error('Error saving combo:', error)
       alert('Failed to save combo. Please try again.')
     }
   }

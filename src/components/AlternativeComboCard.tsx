@@ -1,19 +1,18 @@
 import { useState } from 'react'
 import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react'
 import { useProductSearch, useNavigateWithTransition } from '@shopify/shop-minis-react'
-import type { AlternativeCombo, ComboResult, Category } from '../types'
+import type { AlternativeCombo, ComboResult } from '../types'
 import { extractSearchTerms, getProductImage } from './ProductSearchResult'
 
 interface AlternativeComboCardProps {
   combo: AlternativeCombo
   budget: number
-  category: Category
-  onSelectAltCombo?: (data: { combo: ComboResult; budget: number; category: Category }) => void
+  category: string
+  onSelectAltCombo?: (data: { combo: ComboResult; budget: number; category: string }) => void
 }
 
 // Convert AlternativeCombo to ComboResult format
 function convertToComboResult(altCombo: AlternativeCombo, budget: number): ComboResult {
-  const totalPrice = parseFloat(altCombo.totalPrice)
   return {
     items: altCombo.products.map((productString) => {
       const { name, price } = parseProduct(productString)
@@ -24,8 +23,8 @@ function convertToComboResult(altCombo: AlternativeCombo, budget: number): Combo
         category: '',
       }
     }),
-    totalPrice,
-    savingsPercentage: budget > 0 ? Math.round(((budget - totalPrice) / budget) * 100) : 0,
+    totalPrice: parseFloat(altCombo.totalPrice),
+    savingsPercentage: 0,
     explanation: '',
     comboName: altCombo.comboName,
   }
@@ -121,7 +120,7 @@ export function AlternativeComboCard({ combo, budget, category, onSelectAltCombo
               </div>
             )
           })}
-
+          
           <button
             onClick={(e) => {
               e.stopPropagation()

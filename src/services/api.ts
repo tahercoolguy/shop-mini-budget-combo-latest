@@ -41,31 +41,16 @@ export const generateProductCombo = async (
     formData.append('search_term', searchTerm)
     formData.append('budget', budget.toString())
 
-    console.log('=== API REQUEST ===')
-    console.log('Endpoint:', API_ENDPOINT)
-    console.log('Method: POST')
-    console.log('Parameters:', { search_term: searchTerm, budget })
-
     const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         body: formData,
     })
 
     if (!response.ok) {
-        console.error('API Error - Status:', response.status)
         throw new Error(`API request failed with status ${response.status}`)
     }
 
     const data: ApiResponse = await response.json()
-
-    console.log('=== API RESPONSE ===')
-    console.log('Status:', data.status)
-    console.log('Full Response:', JSON.stringify(data, null, 2))
-    console.log('Result:', data.result)
-    console.log('Products:', data.result?.products)
-    console.log('Combo Name:', data.result?.combo_name)
-    console.log('Total Estimated Price:', data.result?.total_estimated_price)
-    console.log('===================')
 
     if (data.status !== 1) {
         throw new Error('API returned an error status')

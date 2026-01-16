@@ -39,7 +39,7 @@ function AppContent() {
           setLastCombo(lastComboData)
         }
       } catch (error) {
-        console.error('Error loading last combo:', error)
+        // Error loading last combo
       } finally {
         setIsLoadingLastCombo(false)
       }
@@ -123,7 +123,7 @@ function AppContent() {
         await asyncStorage.setItem({ key: 'last-combo', value: JSON.stringify(lastComboData) })
         setLastCombo(lastComboData)
       } catch (error) {
-        console.error('Error saving last combo:', error)
+        // Error saving last combo
       }
       
       setIsLoading(false)
@@ -151,7 +151,7 @@ function AppContent() {
       await asyncStorage.setItem({ key: 'last-combo', value: JSON.stringify(lastComboData) })
       setLastCombo(lastComboData)
     } catch (error) {
-      console.error('Error saving last combo:', error)
+      // Error saving last combo
     }
     
     navigate('/result')

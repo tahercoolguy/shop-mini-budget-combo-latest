@@ -200,9 +200,6 @@ export function extractSearchTerms(productName: string, category: string): strin
     }
 
     const searchTerm = searchTerms.join(' ')
-    console.log(`Words from "${productName}":`, allWords)
-    console.log(`Main keyword found at index ${mainKeywordIndex}: "${mainKeyword}"`)
-    console.log(`Using search term: "${searchTerm}"`)
     
     return searchTerm || category.split(' - ').pop()?.toLowerCase() || 'product'
 }
@@ -210,10 +207,6 @@ export function extractSearchTerms(productName: string, category: string): strin
 export function ProductSearchResult({ productName, allocatedPrice, category }: ProductSearchResultProps) {
     // Extract simple search terms
     const searchTerms = extractSearchTerms(productName, category)
-
-    console.log(`=== Product Search for: "${productName}" ===`)
-    console.log(`Allocated Budget from API: $${allocatedPrice.toFixed(2)}`)
-    console.log(`Searching Shopify for: "${searchTerms}"`)
 
     const { products, loading } = useProductSearch({
         query: searchTerms,
@@ -231,50 +224,17 @@ export function ProductSearchResult({ productName, allocatedPrice, category }: P
         const minPrice = allocatedPrice * 0.6 // 60% of allocated price (40% below)
         const maxPrice = allocatedPrice * 1.4 // 140% of allocated price (40% above)
 
-        console.log(`[${productName}] Using allocated budget: $${allocatedPrice.toFixed(2)} from API`)
-        console.log(`[${productName}] Filtering products by price range: $${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`)
-
-        // Debug: Log first product structure to understand the data format
-        if (products.length > 0) {
-            const sampleProduct = products[0] as any
-            console.log(`[${productName}] Sample product structure:`, {
-                id: sampleProduct.id,
-                title: sampleProduct.title,
-                price: sampleProduct.price,
-                priceRange: sampleProduct.priceRange,
-                variants: sampleProduct.variants,
-                allKeys: Object.keys(sampleProduct)
-            })
-        }
-
         const filtered = products.filter((product) => {
             const productPrice = getProductPrice(product as any)
             if (productPrice === null || typeof productPrice !== 'number') {
-                const productAny = product as any
-                console.log(`[${productName}] Product ${productAny.id || productAny.title} has no valid price`)
-                console.log(`[${productName}] Product structure:`, {
-                    price: productAny.price,
-                    priceRange: productAny.priceRange,
-                    variants: productAny.variants,
-                    hasPrice: !!productAny.price,
-                    hasPriceRange: !!productAny.priceRange,
-                    hasVariants: !!productAny.variants
-                })
                 return false
             }
             const inRange = productPrice >= minPrice && productPrice <= maxPrice
-            const status = inRange ? '✓ IN RANGE' : '✗ OUT OF RANGE'
-            console.log(`[${productName}] Product ${product.id || product.title}: $${productPrice.toFixed(2)} - ${status} (target: $${allocatedPrice.toFixed(2)}, range: $${minPrice.toFixed(2)}-$${maxPrice.toFixed(2)})`)
             return inRange
         })
 
-        console.log(`[${productName}] Filtered ${filtered.length} products from ${products.length} total`)
-        console.log(`[${productName}] Price range used: $${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)} (based on API allocated: $${allocatedPrice.toFixed(2)})`)
         return filtered.slice(0, 2) // Return top 2 matches
     }, [products, allocatedPrice, productName])
-
-    console.log(`[${productName}] Search results: ${products?.length || 0} products found`)
-    console.log(`[${productName}] Filtered products matching budget: ${filteredProducts.length}`)
 
     if (loading) {
         return (

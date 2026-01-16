@@ -38,11 +38,12 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
           setIsSaved(exists)
         }
       } catch (error) {
-        console.error('Error checking saved status:', error)
+        // Error checking saved status
       }
     }
     checkIfSaved()
-  }, [category, budget, combo.totalPrice, asyncStorage])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, budget, combo.totalPrice])
 
   const handleSave = async () => {
     try {
@@ -75,7 +76,6 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
         setIsSaved(true)
       }
     } catch (error) {
-      console.error('Error saving combo:', error)
       alert('Failed to save combo. Please try again.')
     }
   }
@@ -90,28 +90,20 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
     
     // If we have a productId, use it directly
     if (selectedProductId) {
-      console.log('[ComboDetailScreen] Navigating to product with ID:', selectedProductId)
       try {
         navigateToProduct({ productId: selectedProductId })
         return
       } catch (error) {
-        console.error('[ComboDetailScreen] Error navigating to product:', error)
         alert('Failed to open product. Please try again.')
         return
       }
     }
 
     // If no productId, the product wasn't found in Shop
-    console.log('[ComboDetailScreen] No productId found for product:', selectedItem.name)
     alert(`Product "${selectedItem.name}" was not found in Shop. This product may not be available in the Shop app.`)
   }
 
   const handleProductSelect = (index: number, productId: string | null) => {
-    console.log(`[ComboDetailScreen] Product selected:`, {
-      index,
-      productId,
-      productName: combo.items[index]?.name
-    })
     setSelectedProductIndex(index)
     setSelectedProductId(productId)
   }
@@ -246,11 +238,6 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
   return (
     <button
       onClick={() => {
-        console.log(`[ComboProductItem] Clicked "${item.name}"`, {
-          productId,
-          hasMatchedProduct: !!matchedProduct,
-          matchedProductId: matchedProduct?.id
-        })
         onSelect(productId)
       }}
       className={`relative w-full bg-white/5 rounded-xl border-2 p-3 transition-all text-left aspect-square flex flex-col overflow-hidden ${

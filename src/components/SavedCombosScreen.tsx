@@ -23,7 +23,7 @@ export function SavedCombosScreen({
           setSavedCombos(combos)
         }
       } catch (error) {
-        console.error('Error loading saved combos:', error)
+        // Error loading saved combos
       }
     }
     loadSavedCombos()
@@ -37,7 +37,7 @@ export function SavedCombosScreen({
     try {
       await asyncStorage.setItem({key: 'saved-combos', value: JSON.stringify(updated)})
     } catch (error) {
-      console.error('Error deleting combo:', error)
+      // Error deleting combo
     }
   }
 
