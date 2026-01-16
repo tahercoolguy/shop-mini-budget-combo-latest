@@ -1,5 +1,5 @@
 {
-  "name": "Budget Aware Combo",
+  "name": "Budget Aware Combo Finder",
   "description": "Find the perfect product combos within your budget.",
   "permissions": [],
   "scopes": [
@@ -10,5 +10,6 @@
     "shorts.multiplewords.com"
   ],
   "privacy_policy_url": "https://saifs.ai/privacy_page",
-  "terms_url": "https://saifs.ai/terms"
+  "terms_url": "https://saifs.ai/terms",
+  "handle": "budget-aware-combo"
 }
