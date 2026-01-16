@@ -1,5 +1,6 @@
 {
-  "name": "budget-aware-combo-shop-mini",
+  "name": "Budget Aware Combo",
+  "description": "Find the perfect product combos within your budget.",
   "permissions": [],
   "scopes": [
     "product_list:write",
