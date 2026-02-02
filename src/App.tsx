@@ -10,6 +10,23 @@ import { ComboDetailScreen } from './components/ComboDetailScreen'
 import { SavedCombosScreen } from './components/SavedCombosScreen'
 import { generateProductCombo } from './services/api'
 
+const MAX_PRICE_RETRIES = 3
+
+function hasInvalidPrices(combo: ComboResult): boolean {
+  const totalInvalid = Number.isNaN(combo.totalPrice) || !Number.isFinite(combo.totalPrice)
+  if (totalInvalid) return true
+  const hasBadItemPrice = combo.items.some(
+    (item) => Number.isNaN(item.price) || !Number.isFinite(item.price)
+  )
+  if (hasBadItemPrice) return true
+  const altCombos = combo.alternativeCombos ?? []
+  const hasBadAltPrice = altCombos.some((alt) => {
+    const n = parseFloat(alt.totalPrice)
+    return Number.isNaN(n) || !Number.isFinite(n)
+  })
+  return hasBadAltPrice
+}
+
 interface LastCombo {
   combo: ComboResult
   budget: number
@@ -82,32 +99,44 @@ function AppContent() {
         ? needs
         : `I want ${selectedCategory.toLowerCase()} products`
 
-      const apiResponse = await generateProductCombo(searchTerm, budget)
-      const result = apiResponse.result
+      let combo: ComboResult | null = null
+      let lastError: Error | null = null
 
-      // Transform API response to match ComboResult type
-      const combo: ComboResult = {
-        items: result.products.map((product) => ({
-          name: product.product_name,
-          price: parseFloat(product.allocated_price),
-          description: product.description,
-          features: product.features,
-          category: product.category,
-          whyIncluded: product.why_included,
-        })),
-        totalPrice: parseFloat(result.total_estimated_price),
-        savingsPercentage: 100 - parseInt(result.budget_utilization.replace('%', '')),
-        explanation: result.combo_description,
-        comboName: result.combo_name,
-        searchIntent: result.search_intent,
-        budgetUtilization: result.budget_utilization,
-        useCases: result.use_cases,
-        recommendations: result.recommendations,
-        alternativeCombos: result.alternative_combos?.map((alt) => ({
-          comboName: alt.combo_name,
-          products: alt.products,
-          totalPrice: alt.total_price,
-        })),
+      for (let attempt = 0; attempt < MAX_PRICE_RETRIES; attempt++) {
+        const apiResponse = await generateProductCombo(searchTerm, budget)
+        const result = apiResponse.result
+
+        // Transform API response to match ComboResult type
+        combo = {
+          items: result.products.map((product) => ({
+            name: product.product_name,
+            price: parseFloat(product.allocated_price),
+            description: product.description,
+            features: product.features,
+            category: product.category,
+            whyIncluded: product.why_included,
+          })),
+          totalPrice: parseFloat(result.total_estimated_price),
+          savingsPercentage: 100 - parseInt(result.budget_utilization.replace('%', ''), 10) || 0,
+          explanation: result.combo_description,
+          comboName: result.combo_name,
+          searchIntent: result.search_intent,
+          budgetUtilization: result.budget_utilization,
+          useCases: result.use_cases,
+          recommendations: result.recommendations,
+          alternativeCombos: result.alternative_combos?.map((alt) => ({
+            comboName: alt.combo_name,
+            products: alt.products,
+            totalPrice: alt.total_price,
+          })),
+        }
+
+        if (!hasInvalidPrices(combo)) break
+        lastError = new Error('API returned invalid prices (NaN). Retrying…')
+      }
+
+      if (!combo || hasInvalidPrices(combo)) {
+        throw lastError ?? new Error('API returned invalid prices after retries. Please try again.')
       }
 
       setGeneratedCombo(combo)
