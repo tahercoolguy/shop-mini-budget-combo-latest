@@ -174,16 +174,18 @@ export function ResultScreen({
       <div className="px-6 py-6 space-y-3">
         <button
           onClick={handleSave}
-          className="w-full border-2 border-[#a3ff12] py-4 rounded-full text-[#a3ff12] font-bold"
+          className="w-full flex items-center justify-center gap-2 border-2 border-[#a3ff12] py-4 rounded-full text-[#a3ff12] font-bold min-h-[48px]"
         >
-          <Heart size={18} /> {isSaved ? 'Saved' : 'Save Combo'}
+          <Heart size={18} />
+          <span>{isSaved ? 'Saved' : 'Save Combo'}</span>
         </button>
 
         <button
           onClick={() => navigate('/category')}
-          className="w-full border-2 border-gray-600 py-4 rounded-full text-gray-300 font-bold"
+          className="w-full flex items-center justify-center gap-2 border-2 border-gray-600 py-4 rounded-full text-gray-300 font-bold min-h-[48px]"
         >
-          <RotateCcw size={18} /> Start Over
+          <RotateCcw size={18} />
+          <span>Start Over</span>
         </button>
       </div>
     </div>
