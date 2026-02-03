@@ -3,7 +3,7 @@
   "//": "⚠️ MANAGED BY SHOP MINIS - DO NOT EDIT",
   "//info": "This file is maintained by @shopify/shop-minis-cli",
   "//update": "To update run: npx shop-minis upgrade",
-  "//docs": "Learn more: https://shopify.dev/docs/api/shop-minis/configuration",
+  "//docs": "Learn more: https://shopify.dev/docs/api/shop-minis",
   "compilerOptions": {
     "allowJs": false,
     "resolveJsonModule": true,
