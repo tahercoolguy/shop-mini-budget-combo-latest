@@ -9,7 +9,7 @@
  * • May prevent submission
  *
  * To update: Run `npx shop-minis upgrade`
- * Learn more: https://shopify.dev/docs/api/shop-minis/configuration
+ * Learn more: https://shopify.dev/docs/api/shop-minis
  */
 const shopMinisConfig = require("@shopify/shop-minis-react/eslint/config");
 
