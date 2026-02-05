@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { ShoppingBag, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
 import {
   useProductSearch,
   useNavigateWithTransition,
@@ -51,6 +51,30 @@ function parseProduct(
   return { name: productString.trim() }
 }
 
+// Reports whether this product is findable in Shop (for availability check)
+function ProductAvailabilityCheck({
+  productString,
+  index,
+  onResult,
+}: {
+  productString: string
+  index: number
+  onResult: (index: number, available: boolean) => void
+}) {
+  const { name } = parseProduct(productString)
+  const searchTerms = extractSearchTerms(name, '')
+  const { products, loading } = useProductSearch({
+    query: searchTerms,
+    first: 1,
+    filters: { available: true },
+  })
+  useEffect(() => {
+    if (loading) return
+    onResult(index, !!(products && products.length > 0))
+  }, [loading, products, index, onResult])
+  return null
+}
+
 export function AlternativeComboCard({
   combo,
   budget,
@@ -58,7 +82,21 @@ export function AlternativeComboCard({
   onSelectAltCombo,
 }: AlternativeComboCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [availabilityByIndex, setAvailabilityByIndex] = useState<Record<number, boolean>>({})
   const navigate = useNavigateWithTransition()
+
+  const handleAvailabilityResult = useCallback((index: number, available: boolean) => {
+    setAvailabilityByIndex((prev) => {
+      if (prev[index] === available) return prev
+      return { ...prev, [index]: available }
+    })
+  }, [])
+
+  const productCount = combo.products.length
+  const resolvedCount = Object.keys(availabilityByIndex).length
+  const allResolved = resolvedCount === productCount
+  const hasAnyAvailable = allResolved && Object.values(availabilityByIndex).some(Boolean)
+  const noProductsAvailable = allResolved && !hasAnyAvailable
 
   const handleViewCombo = () => {
     const comboResult = convertToComboResult(combo)
@@ -68,6 +106,15 @@ export function AlternativeComboCard({
 
   return (
     <div className="w-full bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-[#a3ff12]/50 transition-all">
+      {/* Hidden availability checks for each product */}
+      {combo.products.map((productString, idx) => (
+        <ProductAvailabilityCheck
+          key={idx}
+          productString={productString}
+          index={idx}
+          onResult={handleAvailabilityResult}
+        />
+      ))}
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -137,12 +184,23 @@ export function AlternativeComboCard({
             )
           })}
 
+          {noProductsAvailable && (
+            <div className="flex items-center gap-2 mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
+              <AlertCircle size={18} className="flex-shrink-0" />
+              <span>No products available in Shop for this combo.</span>
+            </div>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
-              handleViewCombo()
+              if (!noProductsAvailable) handleViewCombo()
             }}
-            className="w-full mt-4 bg-[#a3ff12]/10 border border-[#a3ff12]/50 rounded-lg py-3 px-4 flex items-center justify-center gap-2 text-[#a3ff12] font-medium hover:bg-[#a3ff12]/20 transition-all"
+            disabled={noProductsAvailable}
+            className={`w-full mt-4 rounded-lg py-3 px-4 flex items-center justify-center gap-2 font-medium transition-all min-h-[48px] ${
+              noProductsAvailable
+                ? 'bg-white/10 border border-white/20 text-gray-500 cursor-not-allowed'
+                : 'bg-[#a3ff12]/10 border border-[#a3ff12]/50 text-[#a3ff12] hover:bg-[#a3ff12]/20'
+            }`}
           >
             <span>View Combo</span>
             <ShoppingBag size={16} />

@@ -104,7 +104,7 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
     return (
         <button
             onClick={handleClick}
-            className={`relative rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 p-2.5 flex flex-col overflow-hidden group hover:border-[#a3ff12]/50 transition-all text-left w-full h-full ${className || ''}`}
+            className={`relative rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 p-2.5 flex flex-col overflow-hidden group hover:border-[#a3ff12]/50 transition-all text-left w-full h-full min-h-0 ${className || ''}`}
         >
             {category && (
                 <div className="absolute top-2 right-2 bg-[#a3ff12]/20 text-[#a3ff12] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">

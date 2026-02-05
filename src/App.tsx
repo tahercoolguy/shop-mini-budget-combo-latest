@@ -6,6 +6,7 @@ import { Onboarding } from './components/Onboarding'
 import { CategorySelect } from './components/CategorySelect'
 import { BudgetInput } from './components/BudgetInput'
 import { ResultScreen } from './components/ResultScreen'
+import { ComboGeneratingScreen } from './components/ComboGeneratingScreen'
 import { ComboDetailScreen } from './components/ComboDetailScreen'
 import { SavedCombosScreen } from './components/SavedCombosScreen'
 import { generateProductCombo } from './services/api'
@@ -92,12 +93,15 @@ function AppContent() {
 
     setIsLoading(true)
     setError(null)
+    navigate('/generating')
 
     try {
       // Build search term from category and needs
       const searchTerm = needs.trim()
         ? needs
-        : `I want ${selectedCategory.toLowerCase()} products`
+        : selectedCategory === 'All'
+          ? 'I want a mix of products from all categories - a variety bundle'
+          : `I want ${selectedCategory.toLowerCase()} products`
 
       let combo: ComboResult | null = null
       let lastError: Error | null = null
@@ -155,12 +159,13 @@ function AppContent() {
       }
       
       setIsLoading(false)
-      navigate('/result')
+      navigate('/result', { replace: true })
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to generate combo. Please try again.'
       setIsLoading(false)
       setError(errorMessage)
+      navigate('/budget', { replace: true })
     }
   }
 
@@ -216,9 +221,15 @@ function AppContent() {
           />
 
           <Route
+            path="/generating"
+            element={<ComboGeneratingScreen />}
+          />
+
+          <Route
             path="/budget"
             element={
               <BudgetInput
+                selectedCategory={selectedCategory}
                 budget={budget}
                 setBudget={setBudget}
                 needs={needs}
@@ -238,6 +249,7 @@ function AppContent() {
                   budget={budget}
                   category={selectedCategory}
                   onSelectAltCombo={(data) => setAltComboData(data as { combo: ComboResult; budget: number; category: Category })}
+                  onOpenBestMatchDetail={() => setAltComboData(null)}
                 />
               ) : (
                 <Onboarding onStart={handleStart} />

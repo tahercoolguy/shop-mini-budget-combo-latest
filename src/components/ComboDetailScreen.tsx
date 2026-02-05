@@ -229,9 +229,28 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
   const displayPrice = actualProductPrice || item.price
   const productTitle = (matchedProduct as any)?.title || item.name
 
-  // Don't render if no product found in Shop (after loading completes)
+  // Show placeholder when product not found in Shop (so products are always visible)
   if (!matchedProduct || !productId) {
-    return null
+    return (
+      <div
+        className="relative w-full bg-white/5 rounded-xl border-2 border-dashed border-white/20 p-3 aspect-square flex flex-col overflow-hidden text-left"
+        aria-label={`${item.name} - not available in Shop`}
+      >
+        <div className="flex-1 w-full min-h-0 mb-2 flex items-center justify-center rounded-lg bg-white/5">
+          <span className="text-gray-500 text-[10px] text-center px-2">
+            Not available in Shop
+          </span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <h4 className="text-gray-400 text-[10px] font-bold leading-tight line-clamp-2">
+            {item.name}
+          </h4>
+          <div className="text-gray-500 text-sm">
+            ${item.price.toFixed(2)}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

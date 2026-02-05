@@ -1,9 +1,12 @@
 import {useState} from 'react'
 import {DollarSign, ArrowLeft} from 'lucide-react'
 import {useNavigateWithTransition} from '@shopify/shop-minis-react'
+import type {Category} from '../types'
+import {categoryBudgetConfig} from '../config/categoryBudgetConfig'
 import {NeonButton} from './NeonButton'
 
 interface BudgetInputProps {
+  selectedCategory: Category | null
   budget: number
   setBudget: (val: number) => void
   needs: string
@@ -13,6 +16,7 @@ interface BudgetInputProps {
 }
 
 export function BudgetInput({
+  selectedCategory,
   budget,
   setBudget,
   needs,
@@ -24,6 +28,11 @@ export function BudgetInput({
   const [activeChip, setActiveChip] = useState<
     'tight' | 'mid' | 'premium' | null
   >(null)
+
+  const config = selectedCategory
+    ? categoryBudgetConfig[selectedCategory]
+    : categoryBudgetConfig['Electronics']
+  const { budgetChips, inputPlaceholder, suggestedPrompts } = config
 
   const handleChipClick = (type: 'tight' | 'mid' | 'premium', val: number) => {
     setActiveChip(type)
@@ -58,9 +67,13 @@ export function BudgetInput({
 
         <div className="flex-1">
           <h2 className="text-xl font-semibold text-white mb-1">
-            What are you looking for?
+            {selectedCategory ? `${selectedCategory} — set your budget` : 'What are you looking for?'}
           </h2>
-          <p className="text-sm text-gray-500">Set your limit & tell us your needs.</p>
+          <p className="text-sm text-gray-500">
+            {selectedCategory
+              ? `Set your limit & describe what you want for ${selectedCategory.toLowerCase()}.`
+              : 'Set your limit & tell us your needs.'}
+          </p>
         </div>
       </div>
 
@@ -79,19 +92,10 @@ export function BudgetInput({
           </div>
 
           <div className="flex gap-3">
-            {[
-              {id: 'tight', label: 'Tight', val: 100},
-              {id: 'mid', label: 'Mid-Range', val: 250},
-              {id: 'premium', label: 'Premium', val: 500},
-            ].map(chip => (
+            {budgetChips.map(chip => (
               <button
                 key={chip.id}
-                onClick={() =>
-                  handleChipClick(
-                    chip.id as 'tight' | 'mid' | 'premium',
-                    chip.val
-                  )
-                }
+                onClick={() => handleChipClick(chip.id, chip.val)}
                 className={`
                   px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-all flex-1 min-h-[48px]
                   ${
@@ -101,7 +105,7 @@ export function BudgetInput({
                   }
                 `}
               >
-                {chip.label}
+                {chip.label} ${chip.val}
               </button>
             ))}
           </div>
@@ -112,21 +116,20 @@ export function BudgetInput({
           <textarea
             value={needs}
             onChange={e => setNeeds(e.target.value)}
-            placeholder="e.g., A gaming keyboard and a mouse with high DPI..."
+            placeholder={inputPlaceholder}
             className="w-full h-24 bg-transparent px-4 py-4 text-white placeholder-gray-500 resize-none outline-none text-sm leading-relaxed"
           />
         </div>
 
-        {/* Example prompts below textarea */}
+        {/* Example prompts below textarea — category-specific */}
         <div className="space-y-3">
-          <p className="text-xs text-gray-500 font-medium">Try one of these prompts:</p>
+          <p className="text-xs text-gray-500 font-medium">
+            {selectedCategory
+              ? `Try one of these ${selectedCategory.toLowerCase()} prompts:`
+              : 'Try one of these prompts:'}
+          </p>
           <div className="flex flex-wrap gap-2">
-            {[
-              'clothes for man',
-              'back to school tech setup',
-              'home office essentials',
-              'gift bundle for a sneakerhead',
-            ].map(example => (
+            {suggestedPrompts.map(example => (
               <button
                 key={example}
                 type="button"

@@ -26,7 +26,22 @@ export interface ComboResult {
   alternativeCombos?: AlternativeCombo[]
 }
 
-export type Category = 'Electronics' | 'Fashion' | 'Home Decor' | 'Skincare'
+export type Category =
+  | 'All'
+  | 'Women'
+  | 'Men'
+  | 'Beauty'
+  | 'Food & drinks'
+  | 'Baby & toddler'
+  | 'Home'
+  | 'Fitness & nutrition'
+  | 'Accessories'
+  | 'Pet supplies'
+  | 'Toys & games'
+  | 'Electronics'
+  | 'Arts & crafts'
+  | 'Luggage & bags'
+  | 'Sporting goods'
 
 export interface SavedCombo {
   id: string

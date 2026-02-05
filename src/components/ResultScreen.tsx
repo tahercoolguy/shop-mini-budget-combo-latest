@@ -23,6 +23,8 @@ interface ResultScreenProps {
     budget: number
     category: Category
   }) => void
+  /** Called before navigating to combo-detail so the detail screen shows this best match combo (same as alternative combo view). */
+  onOpenBestMatchDetail?: () => void
 }
 
 export function ResultScreen({
@@ -30,6 +32,7 @@ export function ResultScreen({
   budget,
   category,
   onSelectAltCombo,
+  onOpenBestMatchDetail,
 }: ResultScreenProps) {
   const navigate = useNavigateWithTransition()
   const [isSaved, setIsSaved] = useState(false)
@@ -139,7 +142,10 @@ export function ResultScreen({
                 productName={item.name}
                 allocatedPrice={item.price}
                 category={item.category || 'General'}
-                onClick={() => navigate('/combo-detail')}
+                onClick={() => {
+                  onOpenBestMatchDetail?.()
+                  navigate('/combo-detail')
+                }}
               />
             ))}
           </div>
