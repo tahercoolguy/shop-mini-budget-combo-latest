@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useProductSearch } from '@shopify/shop-minis-react'
-import { extractSearchTerms, getProductPrice, getProductImage } from './ProductSearchResult'
+import { ProductCard, useProductSearch } from '@shopify/shop-minis-react'
+import { extractSearchTerms, getProductPrice, getProductImage, normalizeProductForCard } from './ProductSearchResult'
 
 interface ComboProductCardProps {
     productName: string
@@ -55,13 +55,6 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
         return products[0] || null
     }, [products, allocatedPrice])
 
-    // Get product info for display - always use Shopify price when product is found
-    const actualProductPrice = matchedProduct ? getProductPrice(matchedProduct as any) : null
-    // Only use allocatedPrice as fallback if no Shopify product found
-    const displayPrice = actualProductPrice !== null && actualProductPrice > 0 ? actualProductPrice : allocatedPrice
-    const productTitle = (matchedProduct as any)?.title || productName
-    const productImage = matchedProduct ? getProductImage(matchedProduct as any) : null
-
     const handleClick = () => {
         if (onClick) {
             onClick()
@@ -76,8 +69,9 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
         )
     }
 
-    // Fallback when no product found - show API data
+    // Fallback when no product found - show API data (no product image; SDK Image/ProductCard used only for real products)
     if (!matchedProduct) {
+        const displayPrice = allocatedPrice
         return (
             <div className={`relative rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 p-2.5 flex flex-col overflow-hidden group hover:border-[#a3ff12]/50 transition-all w-full h-full ${className || ''}`}>
                 {category && (
@@ -101,46 +95,23 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
         )
     }
 
+    // Use SDK ProductCard and Image (via ProductCard) for product display per review feedback
+    const product = normalizeProductForCard(matchedProduct)
     return (
-        <button
-            onClick={handleClick}
-            className={`relative rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 p-2.5 flex flex-col overflow-hidden group hover:border-[#a3ff12]/50 transition-all text-left w-full h-full min-h-0 ${className || ''}`}
-        >
+        <div className={`relative w-full h-full min-h-0 ${className || ''}`}>
             {category && (
                 <div className="absolute top-2 right-2 bg-[#a3ff12]/20 text-[#a3ff12] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
                     {category.split(' - ')[0]}
                 </div>
             )}
-            
-            {/* Product Image - Takes most of the space with 1:1 aspect ratio */}
-            <div className="flex-1 w-full min-h-0 mb-1.5 overflow-hidden">
-                {productImage ? (
-                    <div className="w-full h-full rounded-lg overflow-hidden bg-white/5">
-                        <img 
-                            src={productImage} 
-                            alt={productTitle}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                ) : (
-                    <div className="w-full h-full rounded-lg bg-white/5 flex items-center justify-center">
-                        <span className="text-gray-500 text-[10px] text-center px-2">No image</span>
-                    </div>
-                )}
-            </div>
-
-            {/* Product Info and Price - Fixed at bottom */}
-            <div className="flex flex-col gap-1 flex-shrink-0">
-                <h4 className="text-white text-[10px] font-bold leading-tight line-clamp-2">
-                    {productTitle}
-                </h4>
-                <span className="text-[#a3ff12] text-xs font-bold">
-                    ${displayPrice.toFixed(2)}
-                </span>
-            </div>
-
-            {/* Decorative glow */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#a3ff12]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        </button>
+            <ProductCard
+                product={product}
+                variant="compact"
+                touchable={!!onClick}
+                onProductClick={onClick ? handleClick : undefined}
+                reviewsDisabled
+                favoriteButtonDisabled
+            />
+        </div>
     )
 }

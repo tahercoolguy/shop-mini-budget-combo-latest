@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { ProductCard, useProductSearch } from '@shopify/shop-minis-react'
+import type { Product } from '@shopify/shop-minis-platform'
 
 interface ProductSearchResultProps {
     productName: string
@@ -127,6 +128,34 @@ export function getProductImage(product: any): string | null {
     }
 
     return null
+}
+
+/** Normalize a product from useProductSearch (or similar) to the Product shape expected by SDK ProductCard. */
+export function normalizeProductForCard(raw: any): Product {
+  const priceAmount = getProductPrice(raw)
+  const priceStr =
+    priceAmount !== null && priceAmount > 0
+      ? String(priceAmount)
+      : (raw.price?.amount ?? raw.priceRange?.minVariantPrice?.amount ?? '0')
+  const currencyCode =
+    raw.price?.currencyCode ??
+    raw.priceRange?.minVariantPrice?.currencyCode ??
+    'USD'
+  const imageUrl = getProductImage(raw)
+  const title = raw.title ?? 'Product'
+  return {
+    id: raw.id ?? '',
+    title,
+    reviewAnalytics: raw.reviewAnalytics ?? { averageRating: null, reviewCount: null },
+    shop: raw.shop ?? { id: 'shop1', name: '' },
+    defaultVariantId: raw.defaultVariantId ?? raw.id ?? '',
+    isFavorited: raw.isFavorited ?? false,
+    featuredImage: imageUrl
+      ? { url: imageUrl, altText: title, sensitive: false }
+      : null,
+    price: { amount: priceStr, currencyCode },
+    compareAtPrice: raw.compareAtPrice ?? null,
+  }
 }
 
 // Extract specific search terms focusing on main product keyword and key modifiers
@@ -281,9 +310,10 @@ export function ProductSearchResult({ productName, allocatedPrice, category }: P
                 {filteredProducts.map((product) => (
                     <ProductCard
                         key={product.id}
-                        product={product}
+                        product={normalizeProductForCard(product)}
                         variant="compact"
                         touchable={true}
+                        favoriteButtonDisabled
                     />
                 ))}
             </div>

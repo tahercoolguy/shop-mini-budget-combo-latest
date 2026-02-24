@@ -132,28 +132,33 @@ export function ResultScreen({
         </div>
       </div>
 
-      {/* Main Combo */}
+      {/* Main Combo - tap to open combo detail */}
       <div className="px-6">
-        <div className="relative aspect-square rounded-[2rem] border-4 border-[#a3ff12]">
-          <div className="absolute inset-0 grid grid-cols-2 gap-2 p-4 pt-12">
-            {combo.items.slice(0, 4).map((item, idx) => (
-              <ComboProductCard
-                key={idx}
-                productName={item.name}
-                allocatedPrice={item.price}
-                category={item.category || 'General'}
-                onClick={() => {
-                  onOpenBestMatchDetail?.()
-                  navigate('/combo-detail')
-                }}
-              />
-            ))}
+        <button
+          type="button"
+          onClick={() => {
+            onOpenBestMatchDetail?.()
+            navigate('/combo-detail')
+          }}
+          className="w-full text-left rounded-[2rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a3ff12]"
+          aria-label="View best match combo details"
+        >
+          <div className="relative aspect-square rounded-[2rem] border-4 border-[#a3ff12]">
+            <div className="absolute inset-0 grid grid-cols-2 gap-4 p-5">
+              {combo.items.slice(0, 4).map((item, idx) => (
+                <ComboProductCard
+                  key={idx}
+                  productName={item.name}
+                  allocatedPrice={item.price}
+                  category={item.category || 'General'}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-
-        <div className="text-center mt-4 text-[#a3ff12] text-4xl font-bold">
-          ${combo.totalPrice}
-        </div>
+          <div className="text-center mt-4 text-[#a3ff12] text-4xl font-bold">
+            ${combo.totalPrice}
+          </div>
+        </button>
       </div>
 
       {/* Alternative Combos */}

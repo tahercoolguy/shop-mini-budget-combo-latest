@@ -5,9 +5,10 @@ import {
   useNavigateWithTransition,
   useShopNavigation,
   useProductSearch,
+  ProductCard,
 } from '@shopify/shop-minis-react'
 import type { ComboResult, Category, SavedCombo } from '../types'
-import { extractSearchTerms, getProductPrice, getProductImage } from './ProductSearchResult'
+import { extractSearchTerms, getProductPrice, getProductImage, normalizeProductForCard } from './ProductSearchResult'
 
 interface ComboDetailScreenProps {
   combo: ComboResult
@@ -223,11 +224,7 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
     )
   }
 
-  const productImage = matchedProduct ? getProductImage(matchedProduct as any) : null
   const productId = matchedProduct?.id || null
-  const actualProductPrice = matchedProduct ? getProductPrice(matchedProduct as any) : null
-  const displayPrice = actualProductPrice || item.price
-  const productTitle = (matchedProduct as any)?.title || item.name
 
   // Show placeholder when product not found in Shop (so products are always visible)
   if (!matchedProduct || !productId) {
@@ -253,16 +250,26 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
     )
   }
 
+  // Use SDK ProductCard (and Image via ProductCard) per review feedback
+  const product = normalizeProductForCard(matchedProduct)
   return (
-    <button
-      onClick={() => {
-        onSelect(productId)
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(productId)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect(productId)
+        }
       }}
-      className={`relative w-full bg-white/5 rounded-xl border-2 p-3 transition-all text-left aspect-square flex flex-col overflow-hidden ${
+      className={`relative w-full rounded-xl border-2 p-3 transition-all aspect-square overflow-hidden ${
         isSelected
           ? 'border-[#a3ff12] bg-[#a3ff12]/10'
           : 'border-white/10 hover:border-[#a3ff12]/50'
       }`}
+      aria-pressed={isSelected}
+      aria-label={`Select ${product.title}`}
     >
       {/* Selection Indicator - Top Right */}
       {isSelected && (
@@ -278,32 +285,14 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
         </div>
       )}
 
-      {/* Product Image - Takes most of the space */}
-      <div className="flex-1 w-full min-h-0 mb-2">
-        {productImage ? (
-          <div className="w-full h-full rounded-lg overflow-hidden bg-white/5">
-            <img
-              src={productImage}
-              alt={productTitle}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="w-full h-full rounded-lg bg-white/5 flex items-center justify-center">
-            <span className="text-gray-500 text-[10px] text-center px-2">No image</span>
-          </div>
-        )}
-      </div>
-
-      {/* Product Info - Fixed at bottom */}
-      <div className="flex flex-col gap-1">
-        <h4 className="text-white text-[10px] font-bold leading-tight line-clamp-2">
-          {productTitle}
-        </h4>
-        <div className="text-[#a3ff12] text-sm font-bold">
-          ${displayPrice.toFixed(2)}
-        </div>
-      </div>
-    </button>
+      <ProductCard
+        product={product}
+        variant="compact"
+        touchable={false}
+        onProductClick={() => onSelect(productId)}
+        reviewsDisabled
+        favoriteButtonDisabled
+      />
+    </div>
   )
 }

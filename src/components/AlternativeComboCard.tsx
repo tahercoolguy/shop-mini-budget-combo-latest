@@ -3,6 +3,7 @@ import { ShoppingBag, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
 import {
   useProductSearch,
   useNavigateWithTransition,
+  Image,
 } from '@shopify/shop-minis-react'
 import type { AlternativeCombo, ComboResult, Category } from '../types'
 import { extractSearchTerms, getProductImage } from './ProductSearchResult'
@@ -244,10 +245,12 @@ function ProductImageThumbnail({
   }
 
   return (
-    <img
+    <Image
       src={imageUrl}
       alt={productName}
-      className={`${sizeClass} object-cover rounded-lg`}
+      aspectRatio={1}
+      objectFit="cover"
+      className={`${sizeClass} rounded-lg`}
     />
   )
 }
