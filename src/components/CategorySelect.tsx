@@ -96,7 +96,7 @@ export function CategorySelect({
           >
             Include All
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-sm text-gray-500">
             Generate products from every category
           </span>
         </div>
@@ -131,7 +131,7 @@ export function CategorySelect({
                 </div>
               </div>
               <span
-                className={`font-medium text-sm text-center leading-tight break-words line-clamp-2 px-0.5 ${isSelected ? 'text-white' : 'text-gray-400'}`}
+                className={`font-medium text-base text-center leading-tight break-words line-clamp-2 px-0.5 ${isSelected ? 'text-white' : 'text-gray-400'}`}
               >
                 {cat.label}
               </span>

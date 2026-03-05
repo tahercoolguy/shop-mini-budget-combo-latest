@@ -69,30 +69,9 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
         )
     }
 
-    // Fallback when no product found - show API data (no product image; SDK Image/ProductCard used only for real products)
+    // Fallback when no product found in Shop — do not show this product (per requirement: only display products available in Shop)
     if (!matchedProduct) {
-        const displayPrice = allocatedPrice
-        return (
-            <div className={`relative rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 p-2.5 flex flex-col overflow-hidden group hover:border-[#a3ff12]/50 transition-all w-full h-full ${className || ''}`}>
-                {category && (
-                    <div className="absolute top-2 right-2 bg-[#a3ff12]/20 text-[#a3ff12] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
-                        {category.split(' - ')[0]}
-                    </div>
-                )}
-                <div className="flex-1 w-full min-h-0 mb-1.5 rounded-lg bg-white/5 flex items-center justify-center overflow-hidden">
-                    <span className="text-gray-500 text-[10px] text-center px-2">No image</span>
-                </div>
-                <div className="flex flex-col gap-1 flex-shrink-0">
-                    <h4 className="text-white text-[10px] font-bold leading-tight line-clamp-2">
-                        {productName}
-                    </h4>
-                    <span className="text-[#a3ff12] text-xs font-bold">
-                        ${displayPrice.toFixed(2)}
-                    </span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#a3ff12]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            </div>
-        )
+        return null
     }
 
     // Use SDK ProductCard and Image (via ProductCard) for product display per review feedback
@@ -100,7 +79,7 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
     return (
         <div className={`relative w-full h-full min-h-0 ${className || ''}`}>
             {category && (
-                <div className="absolute top-2 right-2 bg-[#a3ff12]/20 text-[#a3ff12] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
+                <div className="absolute top-2 right-2 bg-[#a3ff12]/20 text-[#a3ff12] text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
                     {category.split(' - ')[0]}
                 </div>
             )}

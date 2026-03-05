@@ -130,23 +130,29 @@ export function AlternativeComboCard({
           </div>
         </div>
 
-        {/* Product Images */}
+        {/* Product Images - only products available in Shop */}
         <div className="grid grid-cols-3 gap-2 mb-3">
-          {combo.products.slice(0, 3).map((productString, idx) => {
-            const { name } = parseProduct(productString)
-            return (
-              <ProductImageThumbnail
-                key={idx}
-                productName={name}
-              />
-            )
-          })}
+          {combo.products
+            .map((productString, idx) => ({ productString, idx }))
+            .filter(({ idx }) => availabilityByIndex[idx])
+            .slice(0, 3)
+            .map(({ productString }) => {
+              const { name } = parseProduct(productString)
+              return (
+                <ProductImageThumbnail
+                  key={productString}
+                  productName={name}
+                />
+              )
+            })}
         </div>
 
-        {/* Footer */}
+        {/* Footer - show count of items (and available once resolved) */}
         <div className="flex items-center justify-between pt-3 border-t border-white/10">
-          <span className="text-white text-xs font-medium">
-            {combo.products.length} items
+          <span className="text-white text-sm font-medium">
+            {allResolved
+              ? `${Object.values(availabilityByIndex).filter(Boolean).length} items`
+              : `${combo.products.length} items`}
           </span>
           {isExpanded ? (
             <ChevronUp size={16} className="text-[#a3ff12]" />
@@ -156,34 +162,37 @@ export function AlternativeComboCard({
         </div>
       </button>
 
-      {/* Expanded Content */}
+      {/* Expanded Content - only list products that are available in Shop */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-white/10 pt-4 space-y-3">
-          {combo.products.map((productString, idx) => {
-            const { name, price } = parseProduct(productString)
-            return (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-white/5">
-                  <ProductImageThumbnail
-                    productName={name}
-                    size="small"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-gray-300 text-xs flex-1">
-                      {name}
-                    </span>
-                    {price && (
-                      <span className="text-[#a3ff12] text-xs font-bold">
-                        {price}
+          {combo.products
+            .map((productString, idx) => ({ productString, idx }))
+            .filter(({ idx }) => availabilityByIndex[idx])
+            .map(({ productString }) => {
+              const { name, price } = parseProduct(productString)
+              return (
+                <div key={productString} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-white/5">
+                    <ProductImageThumbnail
+                      productName={name}
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-gray-300 text-sm flex-1">
+                        {name}
                       </span>
-                    )}
+                      {price && (
+                        <span className="text-[#a3ff12] text-sm font-bold">
+                          {price}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
 
           {noProductsAvailable && (
             <div className="flex items-center gap-2 mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
@@ -237,7 +246,7 @@ function ProductImageThumbnail({
       <div
         className={`${sizeClass} bg-white/5 rounded-lg flex items-center justify-center`}
       >
-        <span className="text-gray-500 text-[8px] text-center px-1">
+        <span className="text-gray-500 text-sm text-center px-1">
           No image
         </span>
       </div>

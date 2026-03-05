@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { ArrowLeft, Heart, ShoppingCart, Check } from 'lucide-react'
 import {
   useAsyncStorage,
@@ -16,13 +16,58 @@ interface ComboDetailScreenProps {
   category: Category
 }
 
+/** Uses useProductSearch to determine if a combo item is available in Shop; reports to parent. */
+function DetailItemAvailabilityCheck({
+  item,
+  index,
+  onResult,
+}: {
+  item: { name: string; category?: string }
+  index: number
+  onResult: (index: number, available: boolean) => void
+}) {
+  const searchTerms = extractSearchTerms(item.name, item.category || '')
+  const { products, loading } = useProductSearch({
+    query: searchTerms,
+    first: 1,
+    filters: { available: true },
+  })
+  useEffect(() => {
+    if (loading) return
+    onResult(index, !!(products && products.length > 0))
+  }, [loading, products, index, onResult])
+  return null
+}
+
 export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreenProps) {
   const navigate = useNavigateWithTransition()
   const { navigateToProduct } = useShopNavigation()
   const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null)
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
+  const [availabilityByIndex, setAvailabilityByIndex] = useState<Record<number, boolean>>({})
   const asyncStorage = useAsyncStorage()
+
+  const handleAvailabilityResult = useCallback((index: number, available: boolean) => {
+    setAvailabilityByIndex((prev) => {
+      if (prev[index] === available) return prev
+      return { ...prev, [index]: available }
+    })
+  }, [])
+
+  const availableItems = useMemo(() => {
+    return combo.items.filter((_, idx) => availabilityByIndex[idx])
+  }, [combo.items, availabilityByIndex])
+
+  useEffect(() => {
+    if (
+      selectedProductIndex !== null &&
+      (selectedProductIndex < 0 || selectedProductIndex >= availableItems.length)
+    ) {
+      setSelectedProductIndex(null)
+      setSelectedProductId(null)
+    }
+  }, [availableItems.length, selectedProductIndex])
 
   useEffect(() => {
     const checkIfSaved = async () => {
@@ -86,8 +131,8 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
       return
     }
 
-    const selectedItem = combo.items[selectedProductIndex]
-    
+    const selectedItem = availableItems[selectedProductIndex]
+    if (!selectedItem) return
     // If we have a productId, use it directly
     if (selectedProductId) {
       try {
@@ -129,16 +174,24 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
               {combo.comboName || 'Combo Details'}
             </h2>
             <p className="text-gray-400 text-sm mt-1">
-              ${combo.totalPrice.toFixed(2)} • {combo.items.length} items
+              ${combo.totalPrice.toFixed(2)} • {availableItems.length} items
             </p>
           </div>
         </div>
       </div>
 
-      {/* Products List */}
+      {/* Products List - only items available in Shop (useProductSearch as source of truth) */}
       <div className="flex-1 px-6 pb-4 z-10">
+        {combo.items.map((item, idx) => (
+          <DetailItemAvailabilityCheck
+            key={idx}
+            item={item}
+            index={idx}
+            onResult={handleAvailabilityResult}
+          />
+        ))}
         <div className="grid grid-cols-2 gap-3">
-          {combo.items.map((item, idx) => (
+          {availableItems.map((item, idx) => (
             <ComboProductItem
               key={idx}
               item={item}
@@ -174,7 +227,7 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
                 ? 'bg-white/20 text-gray-400 cursor-not-allowed'
                 : 'bg-white text-black hover:bg-gray-100'
             }`}
-            aria-label={selectedProductIndex !== null ? `Buy ${combo.items[selectedProductIndex].name}` : 'Select a product to buy'}
+            aria-label={selectedProductIndex !== null ? `Buy ${availableItems[selectedProductIndex]?.name}` : 'Select a product to buy'}
           >
             <ShoppingCart size={24} />
           </button>
@@ -226,28 +279,9 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
 
   const productId = matchedProduct?.id || null
 
-  // Show placeholder when product not found in Shop (so products are always visible)
+  // Do not show product if not found in Shop (only display products available in Shop)
   if (!matchedProduct || !productId) {
-    return (
-      <div
-        className="relative w-full bg-white/5 rounded-xl border-2 border-dashed border-white/20 p-3 aspect-square flex flex-col overflow-hidden text-left"
-        aria-label={`${item.name} - not available in Shop`}
-      >
-        <div className="flex-1 w-full min-h-0 mb-2 flex items-center justify-center rounded-lg bg-white/5">
-          <span className="text-gray-500 text-[10px] text-center px-2">
-            Not available in Shop
-          </span>
-        </div>
-        <div className="flex flex-col gap-1">
-          <h4 className="text-gray-400 text-[10px] font-bold leading-tight line-clamp-2">
-            {item.name}
-          </h4>
-          <div className="text-gray-500 text-sm">
-            ${item.price.toFixed(2)}
-          </div>
-        </div>
-      </div>
-    )
+    return null
   }
 
   // Use SDK ProductCard (and Image via ProductCard) per review feedback
@@ -280,7 +314,7 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
 
       {/* Category Badge - Top Left */}
       {item.category && (
-        <div className="absolute top-2 left-2 bg-[#a3ff12]/20 text-[#a3ff12] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
+        <div className="absolute top-2 left-2 bg-[#a3ff12]/20 text-[#a3ff12] text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
           {item.category.split(' - ')[0]}
         </div>
       )}

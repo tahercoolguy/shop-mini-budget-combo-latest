@@ -5,14 +5,16 @@ import {
   BookmarkCheck,
   ArrowLeft,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   useAsyncStorage,
   useNavigateWithTransition,
+  useProductSearch,
 } from '@shopify/shop-minis-react'
 import type { ComboResult, Category, SavedCombo } from '../types'
 import { ComboProductCard } from './ComboProductCard'
 import { AlternativeComboCard } from './AlternativeComboCard'
+import { extractSearchTerms } from './ProductSearchResult'
 
 interface ResultScreenProps {
   combo: ComboResult
@@ -25,6 +27,70 @@ interface ResultScreenProps {
   }) => void
   /** Called before navigating to combo-detail so the detail screen shows this best match combo (same as alternative combo view). */
   onOpenBestMatchDetail?: () => void
+}
+
+/** Uses useProductSearch to determine if a combo item is available in Shop; reports result to parent. */
+function ComboItemAvailabilityCheck({
+  item,
+  index,
+  onResult,
+}: {
+  item: { name: string; category?: string }
+  index: number
+  onResult: (index: number, available: boolean) => void
+}) {
+  const searchTerms = extractSearchTerms(item.name, item.category || '')
+  const { products, loading } = useProductSearch({
+    query: searchTerms,
+    first: 1,
+    filters: { available: true },
+  })
+  useEffect(() => {
+    if (loading) return
+    onResult(index, !!(products && products.length > 0))
+  }, [loading, products, index, onResult])
+  return null
+}
+
+/** Renders only combo products that are available in Shop (useProductSearch as source of truth). */
+function AvailableComboProductGrid({
+  items,
+  categoryDefault,
+}: {
+  items: Array<{ name: string; price: number; category?: string }>
+  categoryDefault: string
+}) {
+  const [availabilityByIndex, setAvailabilityByIndex] = useState<Record<number, boolean>>({})
+  const handleResult = useCallback((index: number, available: boolean) => {
+    setAvailabilityByIndex((prev) => {
+      if (prev[index] === available) return prev
+      return { ...prev, [index]: available }
+    })
+  }, [])
+
+  return (
+    <>
+      {items.map((item, idx) => (
+        <ComboItemAvailabilityCheck
+          key={idx}
+          item={item}
+          index={idx}
+          onResult={handleResult}
+        />
+      ))}
+      {items.map((item, idx) => {
+        if (!availabilityByIndex[idx]) return null
+        return (
+          <ComboProductCard
+            key={idx}
+            productName={item.name}
+            allocatedPrice={item.price}
+            category={item.category || categoryDefault}
+          />
+        )
+      })}
+    </>
+  )
 }
 
 export function ResultScreen({
@@ -145,14 +211,10 @@ export function ResultScreen({
         >
           <div className="relative aspect-square rounded-[2rem] border-4 border-[#a3ff12]">
             <div className="absolute inset-0 grid grid-cols-2 gap-4 p-5">
-              {combo.items.slice(0, 4).map((item, idx) => (
-                <ComboProductCard
-                  key={idx}
-                  productName={item.name}
-                  allocatedPrice={item.price}
-                  category={item.category || 'General'}
-                />
-              ))}
+              <AvailableComboProductGrid
+                items={combo.items.slice(0, 4)}
+                categoryDefault="General"
+              />
             </div>
           </div>
           <div className="text-center mt-4 text-[#a3ff12] text-4xl font-bold">

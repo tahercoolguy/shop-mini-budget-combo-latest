@@ -99,14 +99,14 @@ export function SavedCombosScreen({
                     <span className="text-sm font-bold text-[#a3ff12] bg-[#a3ff12]/10 px-2 py-1 rounded-full">
                       {savedCombo.category}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-sm text-gray-500">
                       {new Date(savedCombo.savedAt).toLocaleDateString()}
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-white">
                     ${savedCombo.combo.totalPrice}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-sm text-gray-400">
                     Budget: ${savedCombo.budget} • Saved{' '}
                     {savedCombo.combo.savingsPercentage}%
                   </p>
@@ -126,7 +126,7 @@ export function SavedCombosScreen({
                 {savedCombo.combo.items.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex justify-between items-center text-sm"
+                    className="flex justify-between items-center text-base"
                   >
                     <span className="text-gray-300">{item.name}</span>
                     <span className="text-[#a3ff12] font-mono font-bold">
