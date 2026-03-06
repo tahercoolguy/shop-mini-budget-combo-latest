@@ -8,7 +8,7 @@ import {
   ProductCard,
 } from '@shopify/shop-minis-react'
 import type { ComboResult, Category, SavedCombo } from '../types'
-import { extractSearchTerms, getProductPrice, getProductImage, normalizeProductForCard } from './ProductSearchResult'
+import { extractSearchTerms, getProductPrice, normalizeProductForCard } from './ProductSearchResult'
 
 interface ComboDetailScreenProps {
   combo: ComboResult
