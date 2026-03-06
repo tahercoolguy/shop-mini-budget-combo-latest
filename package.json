@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
-    "@shopify/shop-minis-cli": "0.2.2",
+    "@shopify/shop-minis-cli": "0.3.3",
     "@tailwindcss/vite": "^4.1.8",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
@@ -23,7 +23,7 @@
     "android >= 138"
   ],
   "dependencies": {
-    "@shopify/shop-minis-react": "0.4.18",
+    "@shopify/shop-minis-react": "0.13.0",
     "lucide-react": "0.513.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
