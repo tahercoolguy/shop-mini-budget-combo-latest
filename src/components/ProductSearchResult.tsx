@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { ProductCard, useProductSearch } from '@shopify/shop-minis-react'
+import type { Product } from '@shopify/shop-minis-platform'
 
 interface ProductSearchResultProps {
     productName: string
@@ -129,6 +130,34 @@ export function getProductImage(product: any): string | null {
     return null
 }
 
+/** Normalize a product from useProductSearch (or similar) to the Product shape expected by SDK ProductCard. */
+export function normalizeProductForCard(raw: any): Product {
+  const priceAmount = getProductPrice(raw)
+  const priceStr =
+    priceAmount !== null && priceAmount > 0
+      ? String(priceAmount)
+      : (raw.price?.amount ?? raw.priceRange?.minVariantPrice?.amount ?? '0')
+  const currencyCode =
+    raw.price?.currencyCode ??
+    raw.priceRange?.minVariantPrice?.currencyCode ??
+    'USD'
+  const imageUrl = getProductImage(raw)
+  const title = raw.title ?? 'Product'
+  return {
+    id: raw.id ?? '',
+    title,
+    reviewAnalytics: raw.reviewAnalytics ?? { averageRating: null, reviewCount: null },
+    shop: raw.shop ?? { id: 'shop1', name: '' },
+    defaultVariantId: raw.defaultVariantId ?? raw.id ?? '',
+    isFavorited: raw.isFavorited ?? false,
+    featuredImage: imageUrl
+      ? { url: imageUrl, altText: title, sensitive: false }
+      : null,
+    price: { amount: priceStr, currencyCode },
+    compareAtPrice: raw.compareAtPrice ?? null,
+  }
+}
+
 // Extract specific search terms focusing on main product keyword and key modifiers
 export function extractSearchTerms(productName: string, category: string): string {
     // Main product keywords (the core product type)
@@ -250,9 +279,9 @@ export function ProductSearchResult({ productName, allocatedPrice, category }: P
     if (!products || products.length === 0) {
         return (
             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">{category}</p>
-                <p className="text-sm text-gray-300 font-medium">{productName}</p>
-                <p className="text-xs text-gray-500 mt-1">No matching products found in Shop</p>
+                <p className="text-sm text-gray-500 mb-1 uppercase tracking-wider">{category}</p>
+                <p className="text-base text-gray-300 font-medium">{productName}</p>
+                <p className="text-sm text-gray-500 mt-1">No matching products found in Shop</p>
                 <p className="text-[#a3ff12] text-sm font-bold mt-2">${allocatedPrice.toFixed(2)}</p>
             </div>
         )
@@ -261,9 +290,9 @@ export function ProductSearchResult({ productName, allocatedPrice, category }: P
     if (filteredProducts.length === 0) {
         return (
             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">{category}</p>
-                <p className="text-sm text-gray-300 font-medium">{productName}</p>
-                <p className="text-xs text-gray-500 mt-1">No products found in price range (${(allocatedPrice * 0.6).toFixed(2)} - ${(allocatedPrice * 1.4).toFixed(2)})</p>
+                <p className="text-sm text-gray-500 mb-1 uppercase tracking-wider">{category}</p>
+                <p className="text-base text-gray-300 font-medium">{productName}</p>
+                <p className="text-sm text-gray-500 mt-1">No products found in price range (${(allocatedPrice * 0.6).toFixed(2)} - ${(allocatedPrice * 1.4).toFixed(2)})</p>
                 <p className="text-[#a3ff12] text-sm font-bold mt-2">Budget from API: ${allocatedPrice.toFixed(2)}</p>
             </div>
         )
@@ -272,18 +301,19 @@ export function ProductSearchResult({ productName, allocatedPrice, category }: P
     return (
         <div className="space-y-3">
             <div className="px-1">
-                <p className="text-xs text-[#a3ff12] uppercase tracking-wider font-bold mb-1">{category}</p>
-                <p className="text-xs text-gray-400">Recommended: {productName}</p>
-                <p className="text-xs text-gray-500 mt-1">Budget from API: <span className="text-[#a3ff12] font-bold">${allocatedPrice.toFixed(2)}</span></p>
-                <p className="text-xs text-gray-500">Price range: ${(allocatedPrice * 0.6).toFixed(2)} - ${(allocatedPrice * 1.4).toFixed(2)}</p>
+                <p className="text-sm text-[#a3ff12] uppercase tracking-wider font-bold mb-1">{category}</p>
+                <p className="text-sm text-gray-400">Recommended: {productName}</p>
+                <p className="text-sm text-gray-500 mt-1">Budget from API: <span className="text-[#a3ff12] font-bold">${allocatedPrice.toFixed(2)}</span></p>
+                <p className="text-sm text-gray-500">Price range: ${(allocatedPrice * 0.6).toFixed(2)} - ${(allocatedPrice * 1.4).toFixed(2)}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
                 {filteredProducts.map((product) => (
                     <ProductCard
                         key={product.id}
-                        product={product}
+                        product={normalizeProductForCard(product)}
                         variant="compact"
                         touchable={true}
+                        favoriteButtonDisabled
                     />
                 ))}
             </div>

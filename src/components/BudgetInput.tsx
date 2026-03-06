@@ -123,7 +123,7 @@ export function BudgetInput({
 
         {/* Example prompts below textarea — category-specific */}
         <div className="space-y-3">
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-sm text-gray-500 font-medium">
             {selectedCategory
               ? `Try one of these ${selectedCategory.toLowerCase()} prompts:`
               : 'Try one of these prompts:'}
@@ -134,7 +134,7 @@ export function BudgetInput({
                 key={example}
                 type="button"
                 onClick={() => setNeeds(example)}
-                className="px-3 py-2 rounded-full text-xs border-2 border-[#2a2a35] bg-[#141419] text-gray-400 hover:border-[#a3ff12]/50 hover:text-white transition-colors min-h-[36px]"
+                className="px-3 py-2 rounded-full text-sm border-2 border-[#2a2a35] bg-[#141419] text-gray-400 hover:border-[#a3ff12]/50 hover:text-white transition-colors min-h-[44px]"
               >
                 {example}
               </button>
