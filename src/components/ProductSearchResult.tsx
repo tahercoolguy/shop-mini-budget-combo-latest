@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { ProductCard, useProductSearch } from '@shopify/shop-minis-react'
-import type { Product } from '@shopify/shop-minis-platform'
+import { ProductCard, useProductSearch, type Product } from '@shopify/shop-minis-react'
 
 interface ProductSearchResultProps {
     productName: string
