@@ -8,7 +8,7 @@ import {
   ProductCard,
 } from '@shopify/shop-minis-react'
 import type { ComboResult, Category, SavedCombo } from '../types'
-import { extractSearchTerms, getProductPrice, normalizeProductForCard } from './ProductSearchResult'
+import { extractSearchTerms, getProductPrice, normalizeProductForCard, isRelevantProductMatch } from './ProductSearchResult'
 
 interface ComboDetailScreenProps {
   combo: ComboResult
@@ -196,6 +196,7 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
               key={idx}
               item={item}
               isSelected={selectedProductIndex === idx}
+              selectedCategory={category}
               onSelect={(productId) => handleProductSelect(idx, productId)}
             />
           ))}
@@ -240,10 +241,11 @@ export function ComboDetailScreen({ combo, budget, category }: ComboDetailScreen
 interface ComboProductItemProps {
   item: { name: string; price: number; category?: string }
   isSelected: boolean
+  selectedCategory: Category
   onSelect: (productId: string | null) => void
 }
 
-function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps) {
+function ComboProductItem({ item, isSelected, selectedCategory, onSelect }: ComboProductItemProps) {
   const searchTerms = extractSearchTerms(item.name, item.category || '')
   const { products, loading } = useProductSearch({
     query: searchTerms,
@@ -262,11 +264,18 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
       if (productPrice === null || typeof productPrice !== 'number') {
         return false
       }
-      return productPrice >= minPrice && productPrice <= maxPrice
+      const inRange = productPrice >= minPrice && productPrice <= maxPrice
+      if (!inRange) return false
+      return isRelevantProductMatch(product, item.name, item.category || '', selectedCategory)
     })
 
-    return filtered.length > 0 ? filtered[0] : products[0]
-  }, [products, item.price])
+    if (filtered.length > 0) return filtered[0]
+
+    // Keep fallback relevant to target item; only relax price.
+    return products.find((product) =>
+      isRelevantProductMatch(product, item.name, item.category || '', selectedCategory)
+    ) || null
+  }, [products, item.price, item.name, item.category, selectedCategory])
 
   // Show loading state while searching
   if (loading) {
@@ -314,8 +323,8 @@ function ComboProductItem({ item, isSelected, onSelect }: ComboProductItemProps)
 
       {/* Category Badge - Top Left */}
       {item.category && (
-        <div className="absolute top-2 left-2 bg-[#a3ff12]/20 text-[#a3ff12] text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
-          {item.category.split(' - ')[0]}
+        <div className="absolute top-2 left-2 max-w-[calc(100%-1rem)] bg-black/80 text-white text-[11px] font-bold px-2 py-1 rounded-full uppercase tracking-wide z-10 border border-white/20 shadow-md leading-tight whitespace-normal break-words">
+          {item.category.split(' - ')[0].replace(/\//g, ' / ')}
         </div>
       )}
 

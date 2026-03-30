@@ -157,6 +157,105 @@ export function normalizeProductForCard(raw: any): Product {
   }
 }
 
+function tokenize(text: string): string[] {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, ' ')
+        .replace(/-/g, ' ')
+        .split(/\s+/)
+        .map((t) => t.trim())
+        .filter(Boolean)
+}
+
+const CATEGORY_HINTS: Record<string, string[]> = {
+    women: ['women', 'womens', 'dress', 'skirt', 'blouse', 'heels', 'handbag'],
+    men: ['men', 'mens', 'shirt', 'chinos', 'hoodie', 'jacket', 'sneaker'],
+    beauty: ['beauty', 'skincare', 'makeup', 'serum', 'lipstick', 'cleanser', 'mascara'],
+    'food & drinks': ['food', 'drink', 'snack', 'coffee', 'tea', 'beverage', 'protein', 'cookie'],
+    'baby & toddler': ['baby', 'toddler', 'kids', 'child', 'toy', 'play', 'learning', 'sensory'],
+    home: ['home', 'kitchen', 'bedroom', 'decor', 'furniture', 'lighting', 'storage'],
+    'fitness & nutrition': ['fitness', 'workout', 'gym', 'exercise', 'protein', 'nutrition', 'supplement'],
+    accessories: ['accessory', 'watch', 'belt', 'wallet', 'sunglasses', 'jewelry', 'strap'],
+    'pet supplies': ['pet', 'dog', 'cat', 'leash', 'litter', 'treat', 'toy'],
+    'toys & games': ['toy', 'game', 'board', 'puzzle', 'plush', 'lego', 'building'],
+    electronics: ['electronics', 'headphone', 'speaker', 'keyboard', 'mouse', 'charger', 'usb'],
+    'arts & crafts': ['art', 'craft', 'paint', 'marker', 'sketch', 'canvas', 'glue'],
+    'luggage & bags': ['luggage', 'bag', 'backpack', 'carry', 'travel', 'suitcase', 'duffel'],
+    'sporting goods': ['sport', 'running', 'soccer', 'tennis', 'basketball', 'racket', 'ball'],
+}
+
+const CATEGORY_NEGATIVES: Record<string, string[]> = {
+    'food & drinks': ['case', 'cover', 'strap', 'holder', 'toolbox', 'carrying bag'],
+    'baby & toddler': ['replacement', 'refill', 'repair', 'industrial', 'hardware'],
+    beauty: ['toolbox', 'wrench', 'screwdriver', 'drill'],
+    electronics: ['onesie', 'stroller', 'pet food', 'dog treats'],
+}
+
+function getCategoryHints(selectedCategory?: string, targetItemCategory?: string): string[] {
+    const cat = String(selectedCategory ?? '').toLowerCase()
+    const itemCat = String(targetItemCategory ?? '').toLowerCase()
+    return [
+        ...(CATEGORY_HINTS[cat] ?? []),
+        ...tokenize(itemCat),
+    ]
+}
+
+/**
+ * Relevance gate to prevent mismatched products (e.g. accessories/tools) from
+ * being selected for combo items.
+ */
+export function isRelevantProductMatch(
+    rawProduct: any,
+    targetProductName: string,
+    targetItemCategory: string,
+    selectedCategory?: string
+): boolean {
+    const title = String(rawProduct?.title ?? '').toLowerCase()
+    if (!title) return false
+
+    const stopWords = new Set([
+        'the', 'and', 'for', 'with', 'from', 'your', 'this', 'that',
+        'set', 'kit', 'bundle', 'pack', 'piece', 'pieces', 'large', 'small',
+        'simple', 'premium', 'classic', 'deluxe', 'playtime'
+    ])
+
+    const targetTokens = tokenize(targetProductName).filter((t) => t.length > 2 && !stopWords.has(t))
+    const titleTokens = new Set(tokenize(title))
+
+    // Prefer meaningful core words over generic endings like "set"/"bundle".
+    const genericTail = new Set(['set', 'kit', 'bundle', 'pack', 'toy'])
+    const coreTokens = targetTokens.filter((t) => !genericTail.has(t)).slice(-2)
+
+    const overlapCount = targetTokens.reduce((count, token) => (
+        count + (titleTokens.has(token) ? 1 : 0)
+    ), 0)
+
+    const hasCoreMatch = coreTokens.some((token) => titleTokens.has(token))
+
+    const context = `${targetProductName} ${targetItemCategory} ${selectedCategory ?? ''}`.toLowerCase()
+    const toyContext = /(baby|toddler|kid|child|play|toy|learning|sensory|motor)/.test(context)
+    const hasToySignal = /(toy|play|toddler|baby|kid|child|block|puzzle|ride|tunnel|slide|ball|doll|activity|learning|sensory|motor|building|stack|peg|scoot)/.test(title)
+    const hasAccessorySignal = /(bag|carrying|carry|case|tool box|toolbox|wrench|screwdriver|replacement|refill|organizer|storage|cover|strap|holder)/.test(title)
+    const hints = getCategoryHints(selectedCategory, targetItemCategory)
+    const hasCategoryHint = hints.some((h) => h.length > 2 && title.includes(h))
+    const negatives = CATEGORY_NEGATIVES[String(selectedCategory ?? '').toLowerCase()] ?? []
+    const hasNegativeForCategory = negatives.some((n) => title.includes(n))
+
+    if (toyContext && hasAccessorySignal && !hasToySignal) {
+        return false
+    }
+    if (hasNegativeForCategory && !hasCategoryHint) {
+        return false
+    }
+
+    // Require clear lexical relevance so broad search matches do not leak in.
+    if (String(selectedCategory ?? '').toLowerCase() === 'all') {
+        return hasCoreMatch || overlapCount >= 2
+    }
+
+    return hasCoreMatch || overlapCount >= 2 || (overlapCount >= 1 && hasCategoryHint)
+}
+
 // Extract specific search terms focusing on main product keyword and key modifiers
 export function extractSearchTerms(productName: string, category: string): string {
     // Main product keywords (the core product type)
@@ -258,7 +357,8 @@ export function ProductSearchResult({ productName, allocatedPrice, category }: P
                 return false
             }
             const inRange = productPrice >= minPrice && productPrice <= maxPrice
-            return inRange
+            if (!inRange) return false
+            return isRelevantProductMatch(product, productName, category, category)
         })
 
         return filtered.slice(0, 2) // Return top 2 matches

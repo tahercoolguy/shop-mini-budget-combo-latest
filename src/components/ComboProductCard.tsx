@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { ProductCard, useProductSearch } from '@shopify/shop-minis-react'
-import { extractSearchTerms, getProductPrice, getProductImage, normalizeProductForCard } from './ProductSearchResult'
+import { extractSearchTerms, getProductPrice, getProductImage, normalizeProductForCard, isRelevantProductMatch } from './ProductSearchResult'
 
 interface ComboProductCardProps {
     productName: string
@@ -35,7 +35,9 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
             if (productPrice === null || typeof productPrice !== 'number') {
                 return false
             }
-            return productPrice >= minPrice && productPrice <= maxPrice
+            const inRange = productPrice >= minPrice && productPrice <= maxPrice
+            if (!inRange) return false
+            return isRelevantProductMatch(product, productName, category, category)
         })
 
         // If we have products in price range, return the first one
@@ -43,16 +45,21 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
             return filtered[0]
         }
 
-        // Fallback: return first product that has an image, even if price doesn't match
+        // Fallback: keep relevance strict, only relax price.
         for (const product of products) {
+            if (!isRelevantProductMatch(product, productName, category, category)) {
+                continue
+            }
             const image = getProductImage(product as any)
             if (image) {
                 return product
             }
         }
 
-        // Last resort: return first product regardless
-        return products[0] || null
+        // Last resort: first relevant product only (avoid unrelated accessories).
+        return products.find((product) =>
+            isRelevantProductMatch(product, productName, category, category)
+        ) || null
     }, [products, allocatedPrice])
 
     const handleClick = () => {
@@ -79,8 +86,8 @@ export function ComboProductCard({ productName, allocatedPrice, category, classN
     return (
         <div className={`relative w-full h-full min-h-0 ${className || ''}`}>
             {category && (
-                <div className="absolute top-2 right-2 bg-[#a3ff12]/20 text-[#a3ff12] text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider z-10 backdrop-blur-sm">
-                    {category.split(' - ')[0]}
+                <div className="absolute top-2 left-2 max-w-[calc(100%-1rem)] bg-black/80 text-white text-[11px] font-bold px-2 py-1 rounded-full uppercase tracking-wide z-10 border border-white/20 shadow-md leading-tight whitespace-normal break-words">
+                    {category.split(' - ')[0].replace(/\//g, ' / ')}
                 </div>
             )}
             <ProductCard

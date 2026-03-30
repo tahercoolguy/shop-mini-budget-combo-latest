@@ -55,10 +55,10 @@ function ComboItemAvailabilityCheck({
 /** Renders only combo products that are available in Shop (useProductSearch as source of truth). */
 function AvailableComboProductGrid({
   items,
-  categoryDefault,
+  selectedCategory,
 }: {
   items: Array<{ name: string; price: number; category?: string }>
-  categoryDefault: string
+  selectedCategory: Category
 }) {
   const [availabilityByIndex, setAvailabilityByIndex] = useState<Record<number, boolean>>({})
   const handleResult = useCallback((index: number, available: boolean) => {
@@ -85,7 +85,7 @@ function AvailableComboProductGrid({
             key={idx}
             productName={item.name}
             allocatedPrice={item.price}
-            category={item.category || categoryDefault}
+            category={item.category || selectedCategory}
           />
         )
       })}
@@ -213,7 +213,7 @@ export function ResultScreen({
             <div className="absolute inset-0 grid grid-cols-2 gap-4 p-5">
               <AvailableComboProductGrid
                 items={combo.items.slice(0, 4)}
-                categoryDefault="General"
+                selectedCategory={category}
               />
             </div>
           </div>
